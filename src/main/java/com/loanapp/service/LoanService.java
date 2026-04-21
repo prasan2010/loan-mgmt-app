@@ -1,5 +1,9 @@
 package com.loanapp.service;
 
+import com.loanapp.dto.LoanResponse;
+import com.loanapp.dto.PaymentResponse;
+import com.loanapp.mapper.LoanMapper;
+import com.loanapp.mapper.PaymentMapper;
 import com.loanapp.model.*;
 import com.loanapp.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -20,29 +24,31 @@ public class LoanService {
     private final LoanRepository loanRepository;
     private final CustomerRepository customerRepository;
     private final PaymentRepository paymentRepository;
+    private final LoanMapper loanMapper;
+    private final PaymentMapper paymentMapper;
 
-    public List<Loan> getAllLoans() {
-        return loanRepository.findAll();
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getAllLoans() {
+        return loanMapper.toResponseList(loanRepository.findAll());
     }
 
-    public Optional<Loan> getLoanById(Long id) {
-        return loanRepository.findById(id);
+    @Transactional(readOnly = true)
+    public Optional<LoanResponse> getLoanById(Long id) {
+        return loanRepository.findById(id).map(loanMapper::toResponse);
     }
 
-    public Optional<Loan> getLoanByNumber(String loanNumber) {
-        return loanRepository.findByLoanNumber(loanNumber);
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getLoansByCustomer(Long customerId) {
+        return loanMapper.toResponseList(loanRepository.findByCustomerId(customerId));
     }
 
-    public List<Loan> getLoansByCustomer(Long customerId) {
-        return loanRepository.findByCustomerId(customerId);
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getLoansByStatus(Loan.LoanStatus status) {
+        return loanMapper.toResponseList(loanRepository.findByStatus(status));
     }
 
-    public List<Loan> getLoansByStatus(Loan.LoanStatus status) {
-        return loanRepository.findByStatus(status);
-    }
-
-    public Loan createLoan(Long customerId, Loan.LoanType loanType, Double principal,
-                           Double interestRate, Integer tenureMonths, String purpose) {
+    public LoanResponse createLoan(Long customerId, Loan.LoanType loanType, Double principal,
+                                   Double interestRate, Integer tenureMonths, String purpose) {
         Customer customer = customerRepository.findById(customerId)
                 .orElseThrow(() -> new RuntimeException("Customer not found: " + customerId));
 
@@ -63,10 +69,10 @@ public class LoanService {
 
         Loan saved = loanRepository.save(loan);
         log.info("Created loan {} for customer {}", saved.getLoanNumber(), customerId);
-        return saved;
+        return loanMapper.toResponse(saved);
     }
 
-    public Loan approveLoan(Long loanId) {
+    public LoanResponse approveLoan(Long loanId) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Loan not found: " + loanId));
 
@@ -77,19 +83,19 @@ public class LoanService {
         loan.setStatus(Loan.LoanStatus.ACTIVE);
 
         log.info("Approved loan {}", loan.getLoanNumber());
-        return loanRepository.save(loan);
+        return loanMapper.toResponse(loanRepository.save(loan));
     }
 
-    public Loan rejectLoan(Long loanId, String remarks) {
+    public LoanResponse rejectLoan(Long loanId, String remarks) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Loan not found: " + loanId));
         loan.setStatus(Loan.LoanStatus.REJECTED);
         loan.setRemarks(remarks);
-        return loanRepository.save(loan);
+        return loanMapper.toResponse(loanRepository.save(loan));
     }
 
-    public Payment recordPayment(Long loanId, Double amount, Payment.PaymentMode mode,
-                                  LocalDate paymentDate, String remarks) {
+    public PaymentResponse recordPayment(Long loanId, Double amount, Payment.PaymentMode mode,
+                                         LocalDate paymentDate, String remarks) {
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new RuntimeException("Loan not found: " + loanId));
 
@@ -97,15 +103,13 @@ public class LoanService {
             throw new RuntimeException("Cannot record payment for loan in status: " + loan.getStatus());
         }
 
-        // Calculate interest and principal components
         double monthlyRate = loan.getInterestRate() / 12 / 100;
         double interestComponent = loan.getOutstandingBalance() * monthlyRate;
         double principalComponent = Math.min(amount - interestComponent, loan.getOutstandingBalance());
 
-        // Check for penalty (late payment)
         double penalty = 0.0;
         if (loan.getNextDueDate() != null && paymentDate.isAfter(loan.getNextDueDate())) {
-            penalty = loan.getEmiAmount() * 0.02; // 2% penalty
+            penalty = loan.getEmiAmount() * 0.02;
         }
 
         Payment payment = Payment.builder()
@@ -122,12 +126,10 @@ public class LoanService {
                 .remarks(remarks)
                 .build();
 
-        // Update outstanding balance
         double newBalance = loan.getOutstandingBalance() - principalComponent;
         loan.setOutstandingBalance(Math.max(0, Math.round(newBalance * 100.0) / 100.0));
         loan.setNextDueDate(paymentDate.plusMonths(1));
 
-        // Close loan if fully paid
         if (loan.getOutstandingBalance() <= 0) {
             loan.setStatus(Loan.LoanStatus.CLOSED);
             log.info("Loan {} fully repaid and closed", loan.getLoanNumber());
@@ -136,15 +138,18 @@ public class LoanService {
         loanRepository.save(loan);
         Payment saved = paymentRepository.save(payment);
         log.info("Recorded payment {} for loan {}", saved.getPaymentReference(), loan.getLoanNumber());
-        return saved;
+        return paymentMapper.toResponse(saved);
     }
 
-    public List<Payment> getPaymentsForLoan(Long loanId) {
-        return paymentRepository.findByLoanIdOrderByPaymentDateDesc(loanId);
+    @Transactional(readOnly = true)
+    public List<PaymentResponse> getPaymentsForLoan(Long loanId) {
+        return paymentMapper.toResponseList(
+                paymentRepository.findByLoanIdOrderByPaymentDateDesc(loanId));
     }
 
-    public List<Loan> getOverdueLoans() {
-        return loanRepository.findOverdueLoans(LocalDate.now());
+    @Transactional(readOnly = true)
+    public List<LoanResponse> getOverdueLoans() {
+        return loanMapper.toResponseList(loanRepository.findOverdueLoans(LocalDate.now()));
     }
 
     public Map<String, Object> getDashboardStats() {
@@ -168,10 +173,6 @@ public class LoanService {
         return stats;
     }
 
-    /**
-     * EMI = P * r * (1+r)^n / ((1+r)^n - 1)
-     * P = principal, r = monthly interest rate, n = tenure in months
-     */
     public double calculateEMI(double principal, double annualRate, int tenureMonths) {
         double monthlyRate = annualRate / 12 / 100;
         if (monthlyRate == 0) return principal / tenureMonths;
