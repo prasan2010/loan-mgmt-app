@@ -3,11 +3,21 @@
     {
       "name": "java",
       "groups": [
-        { "name": "controller", "pattern": "com/loanapp/controller/**" },
-        { "name": "service",    "pattern": "com/loanapp/service/**"    }
+        {
+          "name": "controller",
+          "pattern": "src/main/java/com/loanapp/controller/**"
+        },
+        {
+          "name": "service",
+          "pattern": "src/main/java/com/loanapp/service/**"
+        }
       ],
       "constraints": [
-        { "from": "controller", "to": "service", "type": "allowed" }
+        {
+          "from": "service",
+          "to": "controller",
+          "relation": "deny"
+        }
       ]
     }
   ]
