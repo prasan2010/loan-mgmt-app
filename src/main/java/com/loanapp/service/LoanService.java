@@ -1,5 +1,6 @@
 package com.loanapp.service;
 
+import com.loanapp.controller.LoanController; // VIOLATION: service must not depend on controller
 import com.loanapp.dto.LoanResponse;
 import com.loanapp.dto.PaymentResponse;
 import com.loanapp.mapper.LoanMapper;
@@ -26,6 +27,11 @@ public class LoanService {
     private final PaymentRepository paymentRepository;
     private final LoanMapper loanMapper;
     private final PaymentMapper paymentMapper;
+
+    // ARCHITECTURE VIOLATION: service layer must never depend on controller layer
+    // This creates a forbidden reverse dependency: service → controller
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private LoanController loanController;
 
     @Transactional(readOnly = true)
     public List<LoanResponse> getAllLoans() {
