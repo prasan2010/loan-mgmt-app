@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LoanSphere — Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600;9..40,700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --navy: #0a1628;
+            --navy-mid: #152040;
+            --gold: #c9a84c;
+            --gold-light: #e8c87a;
+            --cream: #f8f4ee;
+            --surface: #ffffff;
+            --border: #e8edf5;
+            --text: #1a2540;
+            --text-muted: #6b7a99;
+            --success: #1a9e6e;
+            --danger: #e63946;
+            --warning: #f4a261;
+            --info: #4361ee;
+            --sidebar-w: 240px;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: #f0f4fb;
+            color: var(--text);
+            display: flex;
+            min-height: 100vh;
+            font-size: 14px;
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: var(--sidebar-w);
+            background: var(--navy);
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0; left: 0; bottom: 0;
+            z-index: 100;
+        }
+
+        .sidebar-brand {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .brand-text {
+            font-family: 'DM Serif Display', serif;
+            font-size: 20px;
+            color: #fff;
+        }
+        .brand-text span { color: var(--gold); }
+
+        .sidebar-nav { flex: 1; padding: 16px 12px; overflow-y: auto; }
+
+        .nav-section-title {
+            font-size: 10px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            padding: 8px 8px 4px;
+            margin-top: 8px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: rgba(255,255,255,0.6);
+            cursor: pointer;
+            transition: all 0.15s;
+            margin-bottom: 2px;
+            font-size: 14px;
+            font-weight: 500;
+            border: none;
+            background: none;
+            width: 100%;
+            text-align: left;
+        }
+
+        .nav-item:hover { background: rgba(255,255,255,0.07); color: #fff; }
+        .nav-item.active { background: rgba(201,168,76,0.15); color: var(--gold); }
+
+        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        .sidebar-footer {
+            padding: 16px 12px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .user-badge {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .avatar {
+            width: 36px; height: 36px;
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .user-info { flex: 1; min-width: 0; }
+        .user-name { color: #fff; font-weight: 600; font-size: 13px; }
+        .user-role { color: rgba(255,255,255,0.4); font-size: 11px; }
+
+        .btn-logout {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: all 0.15s;
+        }
+        .btn-logout:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
+        /* ── Main Content ── */
+        .main {
+            margin-left: var(--sidebar-w);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .topbar {
+            background: #fff;
+            border-bottom: 1px solid var(--border);
+            padding: 0 28px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .page-title {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--text);
+        }
+
+        .topbar-actions { display: flex; gap: 10px; align-items: center; }
+
+        .content { padding: 28px; flex: 1; }
+
+        /* ── Tabs/Sections ── */
+        .section { display: none; }
+        .section.active { display: block; }
+
+        /* ── Stats Cards ── */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 22px;
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::after {
+            content: '';
+            position: absolute;
+            right: -20px; top: -20px;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            opacity: 0.08;
+        }
+
+        .stat-card.gold::after { background: var(--gold); }
+        .stat-card.green::after { background: var(--success); }
+        .stat-card.blue::after { background: var(--info); }
+        .stat-card.red::after { background: var(--danger); }
+
+        .stat-label-text {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 30px;
+            color: var(--text);
+            line-height: 1;
+        }
+
+        .stat-sub {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+
+        .stat-icon {
+            position: absolute;
+            right: 22px; top: 22px;
+            font-size: 24px;
+            opacity: 0.6;
+        }
+
+        /* ── Cards ── */
+        .card {
+            background: #fff;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 18px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .card-title {
+            font-weight: 600;
+            font-size: 15px;
+            color: var(--text);
+        }
+
+        /* ── Buttons ── */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: all 0.15s;
+        }
+
+        .btn-primary {
+            background: var(--navy);
+            color: #fff;
+        }
+        .btn-primary:hover { background: #1a2d52; transform: translateY(-1px); }
+
+        .btn-gold {
+            background: linear-gradient(135deg, var(--gold), var(--gold-light));
+            color: var(--navy);
+        }
+        .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(201,168,76,0.4); }
+
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-outline {
+            background: transparent;
+            border: 1.5px solid var(--border);
+            color: var(--text-muted);
+        }
+        .btn-outline:hover { border-color: var(--navy); color: var(--navy); }
+
+        .btn-sm { padding: 5px 12px; font-size: 12px; border-radius: 7px; }
+
+        /* ── Table ── */
+        .table-wrap { overflow-x: auto; }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead th {
+            padding: 12px 16px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            background: #f8fafd;
+            border-bottom: 1px solid var(--border);
+        }
+
+        tbody td {
+            padding: 13px 16px;
+            border-bottom: 1px solid var(--border);
+            font-size: 13.5px;
+            vertical-align: middle;
+        }
+
+        tbody tr:last-child td { border-bottom: none; }
+        tbody tr:hover { background: #fafbff; }
+
+        /* ── Badges ── */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .badge-active { background: #e6f7f2; color: #1a9e6e; }
+        .badge-pending { background: #fff4e6; color: #e8820c; }
+        .badge-approved { background: #e6f0ff; color: #3a5bd9; }
+        .badge-closed { background: #f0f0f0; color: #666; }
+        .badge-rejected { background: #ffeaea; color: #c0392b; }
+        .badge-defaulted { background: #ffe5e5; color: #c0392b; }
+
+        /* ── Forms ── */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-group { margin-bottom: 0; }
+
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            background: #fff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus { border-color: var(--gold); }
+
+        select.form-control { cursor: pointer; }
+
+        .form-section {
+            padding: 22px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        .form-section .full-width { grid-column: 1 / -1; }
+
+        .form-actions {
+            padding: 16px 22px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        /* ── EMI Calculator ── */
+        .emi-result {
+            background: linear-gradient(135deg, var(--navy), #1a2d52);
+            border-radius: 14px;
+            padding: 24px;
+            margin-top: 20px;
+            color: #fff;
+            display: none;
+        }
+
+        .emi-result.show { display: block; }
+
+        .emi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .emi-item { text-align: center; }
+        .emi-num {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            color: var(--gold-light);
+        }
+        .emi-lbl { font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+
+        /* ── Search ── */
+        .search-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #f0f4fb;
+            border-radius: 10px;
+            padding: 8px 14px;
+        }
+
+        .search-box input {
+            border: none;
+            background: none;
+            outline: none;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px;
+            color: var(--text);
+            width: 220px;
+        }
+
+        /* ── Loan Detail ── */
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            padding: 22px;
+        }
+
+        .detail-item label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 4px;
+        }
+
+        .detail-item .val {
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        /* ── Notification ── */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: var(--navy);
+            color: #fff;
+            padding: 14px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s;
+            max-width: 320px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+        }
+
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.success { border-left: 4px solid var(--success); }
+        .toast.error { border-left: 4px solid var(--danger); }
+
+        /* ── Overview Cards Row ── */
+        .overview-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        /* ── Amount formatting ── */
+        .amount { font-weight: 600; color: var(--text); }
+        .amount-positive { color: var(--success); }
+
+        /* ── Empty state ── */
+        .empty-state {
+            text-align: center;
+            padding: 48px 20px;
+            color: var(--text-muted);
+        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+        .empty-state p { font-size: 15px; }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #d0d8e8; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">🏦</div>
+        <div class="brand-text">Loan<span>Sphere</span></div>
+    </div>
+
+    <nav class="sidebar-nav">
+        <div class="nav-section-title">Main</div>
+        <button class="nav-item active" onclick="showSection('dashboard', this)">
+            <span class="nav-icon">📊</span> Dashboard
+        </button>
+        <button class="nav-item" onclick="showSection('customers', this)">
+            <span class="nav-icon">👥</span> Customers
+        </button>
+        <button class="nav-item" onclick="showSection('loans', this)">
+            <span class="nav-icon">📋</span> Loans
+        </button>
+        <button class="nav-item" onclick="showSection('payments', this)">
+            <span class="nav-icon">💳</span> Payments
+        </button>
+
+        <div class="nav-section-title">Tools</div>
+        <button class="nav-item" onclick="showSection('emi', this)">
+            <span class="nav-icon">🧮</span> EMI Calculator
+        </button>
+        <button class="nav-item" onclick="showSection('overdue', this)">
+            <span class="nav-icon">⚠️</span> Overdue Loans
+        </button>
+    </nav>
+
+    <div class="sidebar-footer">
+        <div class="user-badge">
+            <div class="avatar">👤</div>
+            <div class="user-info">
+                <div class="user-name" th:text="${#authentication.name}">Admin</div>
+                <div class="user-role">Loan Officer</div>
+            </div>
+        </div>
+        <form th:action="@{/logout}" method="post">
+            <button type="submit" class="btn-logout">↗ Sign Out</button>
+        </form>
+    </div>
+</aside>
+
+<!-- Main -->
+<main class="main">
+    <div class="topbar">
+        <div class="page-title" id="pageTitle">Dashboard</div>
+        <div class="topbar-actions">
+            <button class="btn btn-gold" onclick="showSection('customers', null); setTimeout(()=>document.getElementById('addCustomerForm').scrollIntoView(),100)">
+                + New Customer
+            </button>
+            <button class="btn btn-primary" onclick="showSection('loans', null); setTimeout(()=>document.getElementById('addLoanForm').scrollIntoView(),100)">
+                + New Loan
+            </button>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- ── DASHBOARD ── -->
+        <div class="section active" id="section-dashboard">
+            <div class="stats-grid" id="statsGrid">
+                <div class="stat-card gold">
+                    <span class="stat-icon">🏦</span>
+                    <div class="stat-label-text">Total Disbursed</div>
+                    <div class="stat-value" id="stat-disbursed">—</div>
+                    <div class="stat-sub">Cumulative loan amount</div>
+                </div>
+                <div class="stat-card green">
+                    <span class="stat-icon">✅</span>
+                    <div class="stat-label-text">Active Loans</div>
+                    <div class="stat-value" id="stat-active">—</div>
+                    <div class="stat-sub">Currently running</div>
+                </div>
+                <div class="stat-card blue">
+                    <span class="stat-icon">👥</span>
+                    <div class="stat-label-text">Customers</div>
+                    <div class="stat-value" id="stat-customers">—</div>
+                    <div class="stat-sub">Active accounts</div>
+                </div>
+                <div class="stat-card red">
+                    <span class="stat-icon">💰</span>
+                    <div class="stat-label-text">Outstanding</div>
+                    <div class="stat-value" id="stat-outstanding">—</div>
+                    <div class="stat-sub">Total pending balance</div>
+                </div>
+            </div>
+
+            <div class="overview-row">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Recent Loans</div>
+                        <button class="btn btn-outline btn-sm" onclick="showSection('loans', null)">View All</button>
+                    </div>
+                    <div class="table-wrap">
+                        <table id="recentLoansTable">
+                            <thead>
+                                <tr>
+                                    <th>Loan #</th>
+                                    <th>Customer</th>
+                                    <th>Type</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="recentLoansBody">
+                                <tr><td colspan="5" class="empty-state"><p>Loading...</p></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <div class="card-title">Loan Breakdown</div>
+                    </div>
+                    <div style="padding:22px">
+                        <div id="loanBreakdown"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── CUSTOMERS ── -->
+        <div class="section" id="section-customers">
+            <div class="card" style="margin-bottom:20px">
+                <div class="card-header">
+                    <div class="card-title">All Customers</div>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="customerSearch" placeholder="Search by name, email, phone..." oninput="searchCustomers()">
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Phone</th>
+                                <th>Credit Score</th>
+                                <th>Annual Income</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="customersBody">
+                            <tr><td colspan="7"><div class="empty-state"><div class="icon">👥</div><p>Loading customers...</p></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" id="addCustomerForm">
+                <div class="card-header">
+                    <div class="card-title">➕ Add New Customer</div>
+                </div>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>First Name *</label>
+                        <input class="form-control" id="c-firstName" placeholder="First name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Last Name *</label>
+                        <input class="form-control" id="c-lastName" placeholder="Last name" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Email *</label>
+                        <input class="form-control" id="c-email" type="email" placeholder="email@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone (10 digits)</label>
+                        <input class="form-control" id="c-phone" placeholder="9876543210" maxlength="10">
+                    </div>
+                    <div class="form-group">
+                        <label>Date of Birth *</label>
+                        <input class="form-control" id="c-dob" type="date" required>
+                    </div>
+                    <div class="form-group">
+                        <label>PAN Number</label>
+                        <input class="form-control" id="c-pan" placeholder="ABCDE1234F" maxlength="10" style="text-transform:uppercase">
+                    </div>
+                    <div class="form-group">
+                        <label>Credit Score</label>
+                        <input class="form-control" id="c-credit" type="number" placeholder="300–900" min="300" max="900">
+                    </div>
+                    <div class="form-group">
+                        <label>Annual Income (₹)</label>
+                        <input class="form-control" id="c-income" type="number" placeholder="500000">
+                    </div>
+                    <div class="form-group full-width" style="grid-column:1/-1">
+                        <label>Address</label>
+                        <input class="form-control" id="c-address" placeholder="Full address">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-outline" onclick="clearCustomerForm()">Clear</button>
+                    <button class="btn btn-gold" onclick="createCustomer()">Create Customer</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── LOANS ── -->
+        <div class="section" id="section-loans">
+            <div class="card" style="margin-bottom:20px">
+                <div class="card-header">
+                    <div class="card-title">All Loans</div>
+                    <div style="display:flex;gap:8px;align-items:center">
+                        <select class="form-control" id="loanStatusFilter" onchange="loadLoans()" style="width:140px;padding:7px 12px">
+                            <option value="">All Status</option>
+                            <option value="PENDING">Pending</option>
+                            <option value="ACTIVE">Active</option>
+                            <option value="CLOSED">Closed</option>
+                            <option value="REJECTED">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Loan #</th>
+                                <th>Customer</th>
+                                <th>Type</th>
+                                <th>Principal</th>
+                                <th>Outstanding</th>
+                                <th>EMI</th>
+                                <th>Rate</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="loansBody">
+                            <tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div><p>Loading loans...</p></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card" id="addLoanForm">
+                <div class="card-header">
+                    <div class="card-title">➕ Create New Loan</div>
+                </div>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Customer *</label>
+                        <select class="form-control" id="l-customer">
+                            <option value="">Select customer...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Loan Type *</label>
+                        <select class="form-control" id="l-type">
+                            <option value="PERSONAL">Personal Loan</option>
+                            <option value="HOME">Home Loan</option>
+                            <option value="AUTO">Auto Loan</option>
+                            <option value="EDUCATION">Education Loan</option>
+                            <option value="BUSINESS">Business Loan</option>
+                            <option value="GOLD">Gold Loan</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Principal Amount (₹) *</label>
+                        <input class="form-control" id="l-amount" type="number" placeholder="500000" min="10000" oninput="previewEMI()">
+                    </div>
+                    <div class="form-group">
+                        <label>Interest Rate (% p.a.) *</label>
+                        <input class="form-control" id="l-rate" type="number" placeholder="10.5" step="0.1" oninput="previewEMI()">
+                    </div>
+                    <div class="form-group">
+                        <label>Tenure (Months) *</label>
+                        <input class="form-control" id="l-tenure" type="number" placeholder="60" min="1" oninput="previewEMI()">
+                    </div>
+                    <div class="form-group">
+                        <label>Purpose</label>
+                        <input class="form-control" id="l-purpose" placeholder="Reason for loan">
+                    </div>
+                    <div class="form-group full-width" style="grid-column:1/-1" id="emiPreview"></div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-outline" onclick="clearLoanForm()">Clear</button>
+                    <button class="btn btn-gold" onclick="createLoan()">Create Loan</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── PAYMENTS ── -->
+        <div class="section" id="section-payments">
+            <div class="card" style="margin-bottom:20px">
+                <div class="card-header">
+                    <div class="card-title">Record Payment</div>
+                </div>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Select Loan *</label>
+                        <select class="form-control" id="p-loan" onchange="loadLoanPayments()">
+                            <option value="">Select active loan...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Amount (₹) *</label>
+                        <input class="form-control" id="p-amount" type="number" placeholder="Enter amount">
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Mode *</label>
+                        <select class="form-control" id="p-mode">
+                            <option value="NEFT">NEFT</option>
+                            <option value="IMPS">IMPS</option>
+                            <option value="UPI">UPI</option>
+                            <option value="CASH">Cash</option>
+                            <option value="CHEQUE">Cheque</option>
+                            <option value="AUTO_DEBIT">Auto Debit</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Payment Date *</label>
+                        <input class="form-control" id="p-date" type="date">
+                    </div>
+                    <div class="form-group full-width" style="grid-column:1/-1">
+                        <label>Remarks</label>
+                        <input class="form-control" id="p-remarks" placeholder="Optional notes">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="btn btn-gold" onclick="recordPayment()">Record Payment</button>
+                </div>
+            </div>
+
+            <div class="card" id="paymentHistoryCard" style="display:none">
+                <div class="card-header">
+                    <div class="card-title">Payment History</div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reference</th>
+                                <th>Date</th>
+                                <th>Amount</th>
+                                <th>Principal</th>
+                                <th>Interest</th>
+                                <th>Mode</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="paymentHistoryBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── EMI CALCULATOR ── -->
+        <div class="section" id="section-emi">
+            <div class="card" style="max-width:600px;margin:0 auto">
+                <div class="card-header">
+                    <div class="card-title">🧮 EMI Calculator</div>
+                </div>
+                <div class="form-section">
+                    <div class="form-group">
+                        <label>Loan Amount (₹) *</label>
+                        <input class="form-control" id="emi-amount" type="number" placeholder="1000000">
+                    </div>
+                    <div class="form-group">
+                        <label>Interest Rate (% p.a.) *</label>
+                        <input class="form-control" id="emi-rate" type="number" placeholder="8.5" step="0.1">
+                    </div>
+                    <div class="form-group">
+                        <label>Tenure (Months) *</label>
+                        <input class="form-control" id="emi-tenure" type="number" placeholder="120">
+                    </div>
+                    <div style="grid-column:1/-1">
+                        <button class="btn btn-primary" style="width:100%" onclick="calculateEMI()">Calculate EMI</button>
+                    </div>
+                </div>
+
+                <div class="emi-result" id="emiResult">
+                    <div style="font-size:13px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:1px">Calculation Result</div>
+                    <div class="emi-grid">
+                        <div class="emi-item">
+                            <div class="emi-num" id="emi-result-emi">—</div>
+                            <div class="emi-lbl">Monthly EMI</div>
+                        </div>
+                        <div class="emi-item">
+                            <div class="emi-num" id="emi-result-total">—</div>
+                            <div class="emi-lbl">Total Payment</div>
+                        </div>
+                        <div class="emi-item">
+                            <div class="emi-num" id="emi-result-interest">—</div>
+                            <div class="emi-lbl">Total Interest</div>
+                        </div>
+                    </div>
+                </div>
+                <div style="height:22px"></div>
+            </div>
+        </div>
+
+        <!-- ── OVERDUE ── -->
+        <div class="section" id="section-overdue">
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-title">⚠️ Overdue Loans</div>
+                    <button class="btn btn-outline btn-sm" onclick="loadOverdue()">🔄 Refresh</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Loan #</th>
+                                <th>Customer</th>
+                                <th>Outstanding</th>
+                                <th>EMI</th>
+                                <th>Due Date</th>
+                                <th>Days Overdue</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="overdueBody">
+                            <tr><td colspan="7"><div class="empty-state"><div class="icon">⚠️</div><p>Loading...</p></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</main>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+let allCustomers = [];
+let allLoans = [];
+
+// ── Navigation ──
+function showSection(name, btn) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + name).classList.add('active');
+    if (btn) btn.classList.add('active');
+    else {
+        document.querySelectorAll('.nav-item').forEach(n => {
+            if (n.textContent.toLowerCase().includes(name)) n.classList.add('active');
+        });
+    }
+    const titles = {
+        dashboard: 'Dashboard', customers: 'Customers', loans: 'Loans',
+        payments: 'Payments', emi: 'EMI Calculator', overdue: 'Overdue Loans'
+    };
+    document.getElementById('pageTitle').textContent = titles[name] || name;
+
+    if (name === 'dashboard') loadDashboard();
+    else if (name === 'customers') loadCustomers();
+    else if (name === 'loans') { loadLoans(); loadCustomerDropdown(); }
+    else if (name === 'payments') { loadActiveLoansDropdown(); document.getElementById('p-date').value = new Date().toISOString().split('T')[0]; }
+    else if (name === 'overdue') loadOverdue();
+}
+
+// ── Toast ──
+function toast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = (type === 'success' ? '✅ ' : '❌ ') + msg;
+    t.className = 'toast show ' + type;
+    setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+// ── Format ──
+function fmtAmt(n) {
+    if (!n && n !== 0) return '—';
+    if (n >= 10000000) return '₹' + (n/10000000).toFixed(2) + 'Cr';
+    if (n >= 100000) return '₹' + (n/100000).toFixed(2) + 'L';
+    return '₹' + Number(n).toLocaleString('en-IN');
+}
+
+function statusBadge(s) {
+    const map = {
+        ACTIVE:'active', PENDING:'pending', APPROVED:'approved',
+        CLOSED:'closed', REJECTED:'rejected', DEFAULTED:'defaulted'
+    };
+    return `<span class="badge badge-${map[s]||'closed'}">${s}</span>`;
+}
+
+// ── Dashboard ──
+async function loadDashboard() {
+    try {
+        const [stats, loans] = await Promise.all([
+            fetch('/api/dashboard/stats').then(r => r.json()),
+            fetch('/api/loans').then(r => r.json())
+        ]);
+
+        document.getElementById('stat-disbursed').textContent = fmtAmt(stats.totalDisbursed);
+        document.getElementById('stat-active').textContent = stats.activeLoans || 0;
+        document.getElementById('stat-customers').textContent = stats.totalCustomers || 0;
+        document.getElementById('stat-outstanding').textContent = fmtAmt(stats.totalOutstanding);
+
+        // Recent loans (last 5)
+        const recent = [...loans].reverse().slice(0, 5);
+        const tbody = document.getElementById('recentLoansBody');
+        if (!recent.length) {
+            tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><p>No loans yet</p></div></td></tr>';
+        } else {
+            tbody.innerHTML = recent.map(l => `
+                <tr>
+                    <td><strong>${l.loanNumber}</strong></td>
+                    <td>${l.customer?.firstName || ''} ${l.customer?.lastName || ''}</td>
+                    <td>${l.loanType?.replace('_', ' ')}</td>
+                    <td class="amount">${fmtAmt(l.principalAmount)}</td>
+                    <td>${statusBadge(l.status)}</td>
+                </tr>`).join('');
+        }
+
+        // Breakdown
+        const breakdown = { ACTIVE: 0, PENDING: 0, CLOSED: 0, REJECTED: 0 };
+        loans.forEach(l => { if (breakdown[l.status] !== undefined) breakdown[l.status]++; });
+        const total = loans.length || 1;
+        document.getElementById('loanBreakdown').innerHTML = Object.entries(breakdown).map(([k,v]) => `
+            <div style="margin-bottom:14px">
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                    <span style="font-size:13px;color:var(--text-muted)">${k}</span>
+                    <span style="font-weight:600">${v}</span>
+                </div>
+                <div style="height:6px;background:#f0f4fb;border-radius:3px">
+                    <div style="height:6px;border-radius:3px;width:${(v/total*100).toFixed(1)}%;background:${
+                        {ACTIVE:'var(--success)',PENDING:'var(--warning)',CLOSED:'#ccc',REJECTED:'var(--danger)'}[k]
+                    };transition:width 0.5s ease"></div>
+                </div>
+            </div>`).join('');
+    } catch(e) { console.error(e); }
+}
+
+// ── Customers ──
+async function loadCustomers() {
+    const res = await fetch('/api/customers');
+    allCustomers = await res.json();
+    renderCustomers(allCustomers);
+}
+
+function renderCustomers(customers) {
+    const tbody = document.getElementById('customersBody');
+    if (!customers.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">👥</div><p>No customers found</p></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = customers.map(c => `
+        <tr>
+            <td><strong>${c.firstName} ${c.lastName}</strong></td>
+            <td>${c.email}</td>
+            <td>${c.phone || '—'}</td>
+            <td>
+                <span style="color:${c.creditScore >= 700 ? 'var(--success)' : c.creditScore >= 600 ? 'var(--warning)' : 'var(--danger)'}; font-weight:600">
+                    ${c.creditScore || '—'}
+                </span>
+            </td>
+            <td>${fmtAmt(c.annualIncome)}</td>
+            <td>${statusBadge(c.status)}</td>
+            <td>
+                <button class="btn btn-outline btn-sm" onclick="viewCustomerLoans(${c.id}, '${c.firstName} ${c.lastName}')">Loans</button>
+            </td>
+        </tr>`).join('');
+}
+
+function searchCustomers() {
+    const q = document.getElementById('customerSearch').value.toLowerCase();
+    const filtered = allCustomers.filter(c =>
+        (c.firstName + ' ' + c.lastName).toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        (c.phone || '').includes(q)
+    );
+    renderCustomers(filtered);
+}
+
+function viewCustomerLoans(id, name) {
+    showSection('loans', null);
+    setTimeout(async () => {
+        const res = await fetch(`/api/loans?customerId=${id}`);
+        const loans = await res.json();
+        renderLoans(loans);
+        document.getElementById('pageTitle').textContent = `Loans — ${name}`;
+    }, 100);
+}
+
+async function createCustomer() {
+    const body = {
+        firstName: document.getElementById('c-firstName').value,
+        lastName: document.getElementById('c-lastName').value,
+        email: document.getElementById('c-email').value,
+        phone: document.getElementById('c-phone').value,
+        dateOfBirth: document.getElementById('c-dob').value,
+        panNumber: document.getElementById('c-pan').value.toUpperCase(),
+        address: document.getElementById('c-address').value,
+        creditScore: parseInt(document.getElementById('c-credit').value) || null,
+        annualIncome: parseFloat(document.getElementById('c-income').value) || null
+    };
+
+    if (!body.firstName || !body.lastName || !body.email || !body.dateOfBirth) {
+        toast('Please fill in all required fields', 'error'); return;
+    }
+
+    const res = await fetch('/api/customers', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (res.ok) {
+        toast(`Customer ${data.firstName} ${data.lastName} created!`);
+        clearCustomerForm();
+        loadCustomers();
+    } else {
+        toast(data.error || 'Failed to create customer', 'error');
+    }
+}
+
+function clearCustomerForm() {
+    ['c-firstName','c-lastName','c-email','c-phone','c-dob','c-pan','c-address','c-credit','c-income']
+        .forEach(id => document.getElementById(id).value = '');
+}
+
+// ── Loans ──
+async function loadLoans() {
+    const status = document.getElementById('loanStatusFilter').value;
+    const url = status ? `/api/loans?status=${status}` : '/api/loans';
+    const res = await fetch(url);
+    allLoans = await res.json();
+    renderLoans(allLoans);
+}
+
+function renderLoans(loans) {
+    const tbody = document.getElementById('loansBody');
+    if (!loans.length) {
+        tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state"><div class="icon">📋</div><p>No loans found</p></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = loans.map(l => `
+        <tr>
+            <td><strong>${l.loanNumber}</strong></td>
+            <td>${l.customer?.firstName || ''} ${l.customer?.lastName || ''}</td>
+            <td>${(l.loanType||'').replace('_',' ')}</td>
+            <td class="amount">${fmtAmt(l.principalAmount)}</td>
+            <td class="amount">${fmtAmt(l.outstandingBalance)}</td>
+            <td>${fmtAmt(l.emiAmount)}/mo</td>
+            <td>${l.interestRate}%</td>
+            <td>${statusBadge(l.status)}</td>
+            <td style="display:flex;gap:5px;flex-wrap:wrap">
+                ${l.status === 'PENDING' ? `
+                    <button class="btn btn-success btn-sm" onclick="approveLoan(${l.id})">✓ Approve</button>
+                    <button class="btn btn-danger btn-sm" onclick="rejectLoan(${l.id})">✕ Reject</button>
+                ` : ''}
+                ${l.status === 'ACTIVE' ? `
+                    <button class="btn btn-outline btn-sm" onclick="goToPayment(${l.id})">Pay</button>
+                ` : ''}
+            </td>
+        </tr>`).join('');
+}
+
+async function loadCustomerDropdown() {
+    const res = await fetch('/api/customers');
+    const customers = await res.json();
+    const sel = document.getElementById('l-customer');
+    sel.innerHTML = '<option value="">Select customer...</option>' +
+        customers.map(c => `<option value="${c.id}">${c.firstName} ${c.lastName} — ${c.email}</option>`).join('');
+}
+
+async function createLoan() {
+    const body = {
+        customerId: parseInt(document.getElementById('l-customer').value),
+        loanType: document.getElementById('l-type').value,
+        principalAmount: parseFloat(document.getElementById('l-amount').value),
+        interestRate: parseFloat(document.getElementById('l-rate').value),
+        tenureMonths: parseInt(document.getElementById('l-tenure').value),
+        purpose: document.getElementById('l-purpose').value
+    };
+
+    if (!body.customerId || !body.principalAmount || !body.interestRate || !body.tenureMonths) {
+        toast('Please fill in all required fields', 'error'); return;
+    }
+
+    const res = await fetch('/api/loans', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await res.json();
+    if (res.ok) {
+        toast(`Loan ${data.loanNumber} created successfully!`);
+        clearLoanForm();
+        loadLoans();
+    } else {
+        toast(data.error || 'Failed to create loan', 'error');
+    }
+}
+
+async function approveLoan(id) {
+    if (!confirm('Approve this loan?')) return;
+    const res = await fetch(`/api/loans/${id}/approve`, { method:'PUT' });
+    if (res.ok) { toast('Loan approved and activated!'); loadLoans(); }
+    else toast('Failed to approve loan', 'error');
+}
+
+async function rejectLoan(id) {
+    const reason = prompt('Enter rejection reason:');
+    if (reason === null) return;
+    const res = await fetch(`/api/loans/${id}/reject`, {
+        method:'PUT',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ remarks: reason })
+    });
+    if (res.ok) { toast('Loan rejected'); loadLoans(); }
+    else toast('Failed to reject loan', 'error');
+}
+
+function clearLoanForm() {
+    ['l-customer','l-type','l-amount','l-rate','l-tenure','l-purpose'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el.tagName === 'SELECT') el.selectedIndex = 0;
+        else el.value = '';
+    });
+    document.getElementById('emiPreview').innerHTML = '';
+}
+
+function previewEMI() {
+    const p = parseFloat(document.getElementById('l-amount').value);
+    const r = parseFloat(document.getElementById('l-rate').value);
+    const n = parseInt(document.getElementById('l-tenure').value);
+    const prev = document.getElementById('emiPreview');
+    if (p && r && n) {
+        const monthly = r / 12 / 100;
+        const factor = Math.pow(1 + monthly, n);
+        const emi = (p * monthly * factor) / (factor - 1);
+        const total = emi * n;
+        prev.innerHTML = `
+            <div style="background:#f8f4ee;border-radius:10px;padding:14px;display:flex;gap:20px;flex-wrap:wrap">
+                <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Monthly EMI</span>
+                    <div style="font-size:18px;font-weight:700;color:var(--navy)">${fmtAmt(Math.round(emi))}</div></div>
+                <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Total Payable</span>
+                    <div style="font-size:18px;font-weight:700;color:var(--navy)">${fmtAmt(Math.round(total))}</div></div>
+                <div><span style="font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px">Total Interest</span>
+                    <div style="font-size:18px;font-weight:700;color:var(--danger)">${fmtAmt(Math.round(total - p))}</div></div>
+            </div>`;
+    }
+}
+
+// ── Payments ──
+async function loadActiveLoansDropdown() {
+    const res = await fetch('/api/loans?status=ACTIVE');
+    const loans = await res.json();
+    const sel = document.getElementById('p-loan');
+    sel.innerHTML = '<option value="">Select active loan...</option>' +
+        loans.map(l => `<option value="${l.id}">${l.loanNumber} — ${l.customer?.firstName} ${l.customer?.lastName} (${fmtAmt(l.outstandingBalance)} outstanding)</option>`).join('');
+}
+
+async function loadLoanPayments() {
+    const id = document.getElementById('p-loan').value;
+    const card = document.getElementById('paymentHistoryCard');
+    if (!id) { card.style.display = 'none'; return; }
+
+    const res = await fetch(`/api/loans/${id}/payments`);
+    const payments = await res.json();
+    card.style.display = 'block';
+
+    const tbody = document.getElementById('paymentHistoryBody');
+    if (!payments.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><p>No payments yet</p></div></td></tr>';
+        return;
+    }
+    tbody.innerHTML = payments.map(p => `
+        <tr>
+            <td><code style="font-size:12px">${p.paymentReference}</code></td>
+            <td>${p.paymentDate}</td>
+            <td class="amount amount-positive">${fmtAmt(p.amount)}</td>
+            <td>${fmtAmt(p.principalComponent)}</td>
+            <td>${fmtAmt(p.interestComponent)}</td>
+            <td>${p.paymentMode}</td>
+            <td><span class="badge badge-active">${p.status}</span></td>
+        </tr>`).join('');
+}
+
+function goToPayment(loanId) {
+    showSection('payments', null);
+    setTimeout(() => {
+        const sel = document.getElementById('p-loan');
+        // We need to load the dropdown first
+        loadActiveLoansDropdown().then(() => {
+            sel.value = loanId;
+            loadLoanPayments();
+        });
+    }, 200);
+}
+
+async function recordPayment() {
+    const loanId = document.getElementById('p-loan').value;
+    const body = {
+        amount: parseFloat(document.getElementById('p-amount').value),
+        paymentMode: document.getElementById('p-mode').value,
+        paymentDate: document.getElementById('p-date').value,
+        remarks: document.getElementById('p-remarks').value
+    };
+
+    if (!loanId || !body.amount || !body.paymentDate) {
+        toast('Please fill in all required fields', 'error'); return;
+    }
+
+    const res = await fetch(`/api/loans/${loanId}/payments`, {
+        method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(body)
+    });
+    const data = await res.json();
+    if (res.ok) {
+        toast(`Payment ${data.paymentReference} recorded!`);
+        document.getElementById('p-amount').value = '';
+        document.getElementById('p-remarks').value = '';
+        loadLoanPayments();
+        loadActiveLoansDropdown();
+    } else {
+        toast(data.error || 'Payment failed', 'error');
+    }
+}
+
+// ── EMI Calculator ──
+async function calculateEMI() {
+    const p = parseFloat(document.getElementById('emi-amount').value);
+    const r = parseFloat(document.getElementById('emi-rate').value);
+    const n = parseInt(document.getElementById('emi-tenure').value);
+
+    if (!p || !r || !n) { toast('Please enter all values', 'error'); return; }
+
+    const res = await fetch(`/api/loans/emi-calculator?principal=${p}&rate=${r}&months=${n}`);
+    const data = await res.json();
+
+    document.getElementById('emi-result-emi').textContent = fmtAmt(data.emi);
+    document.getElementById('emi-result-total').textContent = fmtAmt(data.totalAmount);
+    document.getElementById('emi-result-interest').textContent = fmtAmt(data.totalInterest);
+    document.getElementById('emiResult').classList.add('show');
+}
+
+// ── Overdue ──
+async function loadOverdue() {
+    const res = await fetch('/api/loans/overdue');
+    const loans = await res.json();
+    const tbody = document.getElementById('overdueBody');
+    if (!loans.length) {
+        tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">✅</div><p>No overdue loans!</p></div></td></tr>';
+        return;
+    }
+    const today = new Date();
+    tbody.innerHTML = loans.map(l => {
+        const due = new Date(l.nextDueDate);
+        const days = Math.floor((today - due) / 86400000);
+        return `
+        <tr>
+            <td><strong>${l.loanNumber}</strong></td>
+            <td>${l.customer?.firstName} ${l.customer?.lastName}</td>
+            <td class="amount">${fmtAmt(l.outstandingBalance)}</td>
+            <td>${fmtAmt(l.emiAmount)}</td>
+            <td>${l.nextDueDate}</td>
+            <td><span style="color:var(--danger);font-weight:700">${days} days</span></td>
+            <td><button class="btn btn-gold btn-sm" onclick="goToPayment(${l.id})">Record Payment</button></td>
+        </tr>`;
+    }).join('');
+}
+
+// ── Init ──
+loadDashboard();
+</script>
+
+</body>
+</html>
