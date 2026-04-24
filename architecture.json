@@ -1,137 +1,203 @@
 {
   "perspectives": [
     {
-      "label": "Java Layers",
-      "description": "Enforces the layered architecture of the loan management application",
       "groups": [
         {
           "label": "controller",
-          "description": "REST and web controllers — entry point for all HTTP requests",
-          "patterns": ["src/main/java/com/loanapp/controller/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/controller/**"
+          ]
         },
         {
           "label": "service",
-          "description": "Business logic layer — orchestrates domain operations",
-          "patterns": ["src/main/java/com/loanapp/service/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/service/**"
+          ]
         },
         {
           "label": "repository",
-          "description": "Data access layer — JPA repositories only",
-          "patterns": ["src/main/java/com/loanapp/repository/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/repository/**"
+          ]
         },
         {
           "label": "model",
-          "description": "Domain entities — pure JPA objects with no layer dependencies",
-          "patterns": ["src/main/java/com/loanapp/model/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/model/**"
+          ]
         },
         {
           "label": "dto",
-          "description": "Data transfer objects — plain data carriers for transport",
-          "patterns": ["src/main/java/com/loanapp/dto/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/dto/**"
+          ]
         },
         {
           "label": "mapper",
-          "description": "MapStruct mappers — translate between model and dto only",
-          "patterns": ["src/main/java/com/loanapp/mapper/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/mapper/**"
+          ]
         },
         {
           "label": "config",
-          "description": "Spring configuration classes — wires beans, no controller coupling",
-          "patterns": ["src/main/java/com/loanapp/config/**"]
+          "patterns": [
+            "src/main/java/com/loanapp/config/**"
+          ]
         }
       ],
       "constraints": [
         {
-          "description": "Service must never call back into controller — prevents reverse dependency cycle",
-          "from": ["service"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "service"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "Service must never call back into controller — prevents reverse dependency cycle"
         },
         {
-          "description": "Repository must never call service — data layer must remain unaware of business logic",
-          "from": ["repository"],
-          "to": ["service"],
-          "relation": "deny"
+          "from": [
+            "repository"
+          ],
+          "to": [
+            "service"
+          ],
+          "relation": "deny",
+          "description": "Repository must never call service — data layer must remain unaware of business logic"
         },
         {
-          "description": "Repository must never call controller — no upward dependency from data layer",
-          "from": ["repository"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "repository"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "Repository must never call controller — no upward dependency from data layer"
         },
         {
-          "description": "Model (entities) must not depend on controller — keeps domain objects pure",
-          "from": ["model"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "model"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "Model (entities) must not depend on any higher layer — keeps domain objects pure"
         },
         {
-          "description": "Model must not depend on service layer",
-          "from": ["model"],
-          "to": ["service"],
-          "relation": "deny"
+          "from": [
+            "model"
+          ],
+          "to": [
+            "service"
+          ],
+          "relation": "deny",
+          "description": "Model must not depend on service layer"
         },
         {
-          "description": "Model must not depend on repository — avoids circular JPA references",
-          "from": ["model"],
-          "to": ["repository"],
-          "relation": "deny"
+          "from": [
+            "model"
+          ],
+          "to": [
+            "repository"
+          ],
+          "relation": "deny",
+          "description": "Model must not depend on repository to avoid circular JPA references"
         },
         {
-          "description": "DTOs are plain data carriers — must not depend on service",
-          "from": ["dto"],
-          "to": ["service"],
-          "relation": "deny"
+          "from": [
+            "dto"
+          ],
+          "to": [
+            "service"
+          ],
+          "relation": "deny",
+          "description": "DTOs are plain data carriers — must not depend on service or controller"
         },
         {
-          "description": "DTOs must not depend on controller layer",
-          "from": ["dto"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "dto"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "DTOs must not depend on controller layer"
         },
         {
-          "description": "DTOs must not depend on repository — no data access from transport objects",
-          "from": ["dto"],
-          "to": ["repository"],
-          "relation": "deny"
+          "from": [
+            "dto"
+          ],
+          "to": [
+            "repository"
+          ],
+          "relation": "deny",
+          "description": "DTOs must not depend on repository — no data access from transport objects"
         },
         {
-          "description": "Mappers translate between model and dto only — must not call service logic",
-          "from": ["mapper"],
-          "to": ["service"],
-          "relation": "deny"
+          "from": [
+            "mapper"
+          ],
+          "to": [
+            "service"
+          ],
+          "relation": "deny",
+          "description": "Mappers translate between model and dto only — must not call service logic"
         },
         {
-          "description": "Mappers must not depend on controller",
-          "from": ["mapper"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "mapper"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "Mappers must not depend on controller"
         },
         {
-          "description": "Mappers must not call repositories directly",
-          "from": ["mapper"],
-          "to": ["repository"],
-          "relation": "deny"
+          "from": [
+            "mapper"
+          ],
+          "to": [
+            "repository"
+          ],
+          "relation": "deny",
+          "description": "Mappers must not call repositories directly"
         },
         {
-          "description": "Controller may only call service — direct repository access bypasses business logic",
-          "from": ["controller"],
-          "to": ["repository"],
-          "relation": "deny"
+          "from": [
+            "controller"
+          ],
+          "to": [
+            "repository"
+          ],
+          "relation": "deny",
+          "description": "Controller may only call service — direct repository access from controller bypasses business logic"
         },
         {
-          "description": "Controller must not import model entities directly — use DTOs for transport",
-          "from": ["controller"],
-          "to": ["model"],
-          "relation": "deny"
+          "from": [
+            "controller"
+          ],
+          "to": [
+            "model"
+          ],
+          "relation": "deny",
+          "description": "Controller must not import model entities directly — use DTOs for transport"
         },
         {
-          "description": "Config may wire service beans but must not depend on controller — avoids circular config",
-          "from": ["config"],
-          "to": ["controller"],
-          "relation": "deny"
+          "from": [
+            "config"
+          ],
+          "to": [
+            "controller"
+          ],
+          "relation": "deny",
+          "description": "Config may wire service beans but must not depend on controller — avoids circular config"
         }
-      ]
+      ],
+      "label": "java"
     }
   ]
 }
