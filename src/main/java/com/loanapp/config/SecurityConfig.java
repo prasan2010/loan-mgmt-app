@@ -1,5 +1,6 @@
 package com.loanapp.config;
 
+import com.loanapp.controller.WebController; // ARCH-DRIFT-10: config must not depend on controller layer
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,10 @@ import org.springframework.security.web.SecurityFilterChain;
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+
+    // ARCH-DRIFT-10: config layer referencing controller to hardcode permitted paths — forbidden coupling
+    @SuppressWarnings("unused")
+    private final Class<?> webControllerRef = WebController.class;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {

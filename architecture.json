@@ -10,11 +10,116 @@
         {
           "name": "service",
           "pattern": "src/main/java/com/loanapp/service/**"
+        },
+        {
+          "name": "repository",
+          "pattern": "src/main/java/com/loanapp/repository/**"
+        },
+        {
+          "name": "model",
+          "pattern": "src/main/java/com/loanapp/model/**"
+        },
+        {
+          "name": "dto",
+          "pattern": "src/main/java/com/loanapp/dto/**"
+        },
+        {
+          "name": "mapper",
+          "pattern": "src/main/java/com/loanapp/mapper/**"
+        },
+        {
+          "name": "config",
+          "pattern": "src/main/java/com/loanapp/config/**"
         }
       ],
       "constraints": [
         {
+          "comment": "Service must never call back into controller — prevents reverse dependency cycle",
           "from": "service",
+          "to": "controller",
+          "relation": "deny"
+        },
+        {
+          "comment": "Repository must never call service — data layer must remain unaware of business logic",
+          "from": "repository",
+          "to": "service",
+          "relation": "deny"
+        },
+        {
+          "comment": "Repository must never call controller — no upward dependency from data layer",
+          "from": "repository",
+          "to": "controller",
+          "relation": "deny"
+        },
+        {
+          "comment": "Model (entities) must not depend on any higher layer — keeps domain objects pure",
+          "from": "model",
+          "to": "controller",
+          "relation": "deny"
+        },
+        {
+          "comment": "Model must not depend on service layer",
+          "from": "model",
+          "to": "service",
+          "relation": "deny"
+        },
+        {
+          "comment": "Model must not depend on repository to avoid circular JPA references",
+          "from": "model",
+          "to": "repository",
+          "relation": "deny"
+        },
+        {
+          "comment": "DTOs are plain data carriers — must not depend on service or controller",
+          "from": "dto",
+          "to": "service",
+          "relation": "deny"
+        },
+        {
+          "comment": "DTOs must not depend on controller layer",
+          "from": "dto",
+          "to": "controller",
+          "relation": "deny"
+        },
+        {
+          "comment": "DTOs must not depend on repository — no data access from transport objects",
+          "from": "dto",
+          "to": "repository",
+          "relation": "deny"
+        },
+        {
+          "comment": "Mappers translate between model and dto only — must not call service logic",
+          "from": "mapper",
+          "to": "service",
+          "relation": "deny"
+        },
+        {
+          "comment": "Mappers must not depend on controller",
+          "from": "mapper",
+          "to": "controller",
+          "relation": "deny"
+        },
+        {
+          "comment": "Mappers must not call repositories directly",
+          "from": "mapper",
+          "to": "repository",
+          "relation": "deny"
+        },
+        {
+          "comment": "Controller may only call service — direct repository access from controller bypasses business logic",
+          "from": "controller",
+          "to": "repository",
+          "relation": "deny"
+        },
+        {
+          "comment": "Controller must not import model entities directly — use DTOs for transport",
+          "from": "controller",
+          "to": "model",
+          "relation": "deny"
+        },
+        {
+          "comment": "Config may wire service beans but must not depend on controller — avoids circular config",
+          "from": "config",
           "to": "controller",
           "relation": "deny"
         }

@@ -1,5 +1,6 @@
 package com.loanapp.service;
 
+import com.loanapp.controller.CustomerController; // ARCH-DRIFT-2: service must not depend on controller
 import com.loanapp.dto.CustomerResponse;
 import com.loanapp.mapper.CustomerMapper;
 import com.loanapp.model.Customer;
@@ -21,6 +22,10 @@ public class CustomerService {
 
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
+
+    // ARCH-DRIFT-2: service → controller (forbidden reverse dependency)
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private CustomerController customerController;
 
     @Transactional(readOnly = true)
     public List<CustomerResponse> getAllCustomers() {

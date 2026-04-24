@@ -2,6 +2,7 @@ package com.loanapp.mapper;
 
 import com.loanapp.dto.LoanResponse;
 import com.loanapp.model.Loan;
+import com.loanapp.service.LoanService; // ARCH-DRIFT-8: mapper must not depend on service layer
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

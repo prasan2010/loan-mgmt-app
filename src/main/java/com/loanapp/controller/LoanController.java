@@ -1,7 +1,7 @@
 package com.loanapp.controller;
 
 import com.loanapp.dto.*;
-import com.loanapp.model.Loan;
+import com.loanapp.model.Loan; // ARCH-DRIFT-4: controller must not import model entities — use DTOs
 import com.loanapp.service.LoanService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

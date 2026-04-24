@@ -1,6 +1,6 @@
 package com.loanapp.service;
 
-import com.loanapp.controller.LoanController; // VIOLATION: service must not depend on controller
+import com.loanapp.controller.LoanController; // ARCH-DRIFT-1: service must not depend on controller
 import com.loanapp.dto.LoanResponse;
 import com.loanapp.dto.PaymentResponse;
 import com.loanapp.mapper.LoanMapper;
@@ -22,14 +22,16 @@ import java.util.*;
 @Transactional
 public class LoanService {
 
+    // Constant referenced by LoanRequest DTO — source of ARCH-DRIFT-7
+    public static final int MAX_LOAN_TENURE_MONTHS = 360;
+
     private final LoanRepository loanRepository;
     private final CustomerRepository customerRepository;
     private final PaymentRepository paymentRepository;
     private final LoanMapper loanMapper;
     private final PaymentMapper paymentMapper;
 
-    // ARCHITECTURE VIOLATION: service layer must never depend on controller layer
-    // This creates a forbidden reverse dependency: service → controller
+    // ARCH-DRIFT-1: service → controller (forbidden reverse dependency)
     @org.springframework.beans.factory.annotation.Autowired(required = false)
     private LoanController loanController;
 

@@ -1,6 +1,7 @@
 package com.loanapp.repository;
 
 import com.loanapp.model.Loan;
+import com.loanapp.service.LoanService; // ARCH-DRIFT-6: repository must not depend on service layer
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;

@@ -3,7 +3,8 @@ package com.loanapp.controller;
 import com.loanapp.dto.CustomerRequest;
 import com.loanapp.dto.CustomerResponse;
 import com.loanapp.dto.CustomerUpdateRequest;
-import com.loanapp.model.Customer;
+import com.loanapp.model.Customer; // ARCH-DRIFT-5: controller must not import model entities — use DTOs
+import com.loanapp.repository.CustomerRepository; // ARCH-DRIFT-3: controller must not access repository directly
 import com.loanapp.service.CustomerService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,10 @@ import java.util.Map;
 public class CustomerController {
 
     private final CustomerService customerService;
+
+    // ARCH-DRIFT-3: controller → repository (bypasses service layer)
+    @org.springframework.beans.factory.annotation.Autowired
+    private CustomerRepository customerRepository;
 
     @GetMapping
     public ResponseEntity<List<CustomerResponse>> getAllCustomers(
