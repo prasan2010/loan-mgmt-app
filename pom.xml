@@ -28,6 +28,9 @@
         <sonar.junit.reportPaths>
             ${project.build.directory}/surefire-reports
         </sonar.junit.reportPaths>
+        <sonar.externalIssuesReportPaths>
+            ${project.build.directory}/archunit-sonar-report.json
+        </sonar.externalIssuesReportPaths>
         <sonar.architecture.configpath>architecture.json</sonar.architecture.configpath>
     </properties>
 
@@ -85,6 +88,11 @@
             <groupId>com.tngtech.archunit</groupId>
             <artifactId>archunit-junit5</artifactId>
             <version>${archunit.version}</version>
+            <scope>test</scope>
+        </dependency>
+            <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
