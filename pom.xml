@@ -30,6 +30,7 @@
         <sonar.junit.reportPaths>
             ${project.build.directory}/surefire-reports
         </sonar.junit.reportPaths>
+		<sonar.architecture.configpath>architecture.json</sonar.architecture.configpath>
     </properties>
 
     <dependencies>
